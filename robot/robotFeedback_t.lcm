@@ -1,0 +1,8 @@
+package robotlcm;
+struct robotFeedback_t
+{
+    int64_t  timestamp;
+    int32_t  speedCurrent;
+    double   positionEstimation[3];
+    boolean  laneRight;
+}

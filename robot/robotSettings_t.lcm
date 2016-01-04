@@ -1,0 +1,9 @@
+package robotlcm;
+struct robotSettings_t
+{
+    int64_t  timestamp; 
+    int32_t  desiredSpeed;
+    double   positionFromGPS[3];
+    boolean  changeLane;
+}
+
