@@ -18,13 +18,13 @@ print robot.init()
 
 # initialize the camera and grab a reference to the raw camera capture
 camera = PiCamera()
-camera.resolution = (320, 280)
-rawCapture = PiRGBArray(camera, size=(320, 280))
+camera.resolution = (640, 480)
+rawCapture = PiRGBArray(camera, size=(640, 480))
 
 cruise_distance = 200 ## in mm
-v_max = 155 ## in mm/s
+v_max = 80 ## in mm/s
 v_curr = 1
-a_max = 10
+a_max = 2
 
 # allow the camera to warmup
 time.sleep(0.1)
@@ -34,17 +34,21 @@ def findDist():
     camera.capture(rawCapture, format="bgr")
     img = rawCapture.array               #take image
     
-    frame = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)  #convert to grayscale image
+    imgc = img[250:640,0:640]  #crop image lower half
     
-    cv2.imwrite('cam.jpg',frame)   #save image
+    cv2.imshow("image",imgc)
+    cv2.waitKey(1)
+    
+    cv2.imwrite('cam.jpg',imgc)    #save image
     time.sleep(0.5)                #wait to save the image
     imt = cv2.imread('cam.jpg')    #read the saved image
 
-    print 'send image'
+    #print 'send image'
     ft = time.time()
-    x = octave.getDistance(imt)   #call matlab with the saved image and get the distance.  x == 100 or 50 means there is no spirals
+    x = octave.findDistance(imt)   #call matlab with the saved image and get the distance.  x == 100 or 50 means there is no spirals
     tim = time.time()-ft
     print "time took  :",tim
+    
     rawCapture.truncate(0)
     
     return x*10
@@ -54,11 +58,12 @@ def cruiseControl(cam_distance):
     global v_curr   
     brk_dist =  cam_distance
     ctr_dist = ((0.5*v_curr*v_curr)/a_max )+cruise_distance
+    '''
     print"------------------"
     print "brk_dist :",brk_dist
     print "ctr_dist :",ctr_dist
     print"------------------"
-        
+    '''    
     
     if (ctr_dist < brk_dist):
         v_curr = min(v_max, v_curr+a_max)
@@ -74,13 +79,14 @@ def cruiseControl(cam_distance):
     
 if __name__ == '__main__':
     
-    max_time = 30
+    max_time = 60
     start_time = time.time()  # remember when we started
     while (time.time() - start_time) < max_time:
     
         x = findDist()
-        cruiseControl(x)
-        print x
+        #cruiseControl(x)
+        print 'current distance :',x
+        print "----------------------"
         time.sleep(0.2)
     robot.init()
     
