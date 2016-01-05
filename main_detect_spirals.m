@@ -27,7 +27,7 @@ function[spirals] = main_detect_spirals(img)
     dy=-dx';
     gy=gx';
     
-    sma2=(10); %defalult 16
+    sma2=(16); %defalult 16
     sma=[sma1,sma2];
     typ=2; sm=double(-sma2); gammaf=100;
     % ...if sm is negative then symdergaussgen interprets it as the radius

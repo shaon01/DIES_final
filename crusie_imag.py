@@ -83,7 +83,7 @@ if __name__ == '__main__':
     start_time = time.time()  # remember when we started
     while (time.time() - start_time) < max_time:
     
-        x = findDist()
+        x,y= findDist()
         #cruiseControl(x)
         print 'current distance :',x
         print "----------------------"
