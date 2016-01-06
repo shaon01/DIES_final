@@ -15,10 +15,10 @@ end
         
 if size(foundSpirols, 1) > 1     %calculate the distance between found real spirals
     distance = sqrt(((foundSpirols(2,1)-foundSpirols(1,1))^2)+((foundSpirols(2,2)-foundSpirols(1,2))^2));
-    Dis_to_obj=(5*648.3492)/distance;  %for 320x280 =3.2, 640x480 = 5
+    Dis_to_obj=(4.25*648.3492)/distance;  %for 320x280 =3.2, 640x480 = 5
     
 else   %if no distance return big distance
-    Dis_to_obj = 0;
+    Dis_to_obj = 2;
 end
 
 

@@ -1,5 +1,3 @@
-
-
 import sys
 sys.path.append('/usr/local/lib/python2.7/site-packages')
 
@@ -8,6 +6,7 @@ from picamera import PiCamera
 import time
 import cv2
 import socket
+import struct
 
 host = '192.168.30.37'   ###address of the server
 port = 9092
@@ -28,25 +27,31 @@ time.sleep(0.1)
 for frame in camera.capture_continuous(rawCapture, format="bgr", use_video_port=True):
     
     img = frame.array
-    
-    frame = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-
+    img_crp = img[250:640,0:640]  #crop image lower half
+        
+    frame = cv2.cvtColor(img_crp, cv2.COLOR_BGR2GRAY)
+   
     d = frame.flatten ()
     s = d.tostring ()
-    
-    
-    for i in xrange(20):
-       sock.send (s[i*15360:(i+1)*15360])
-       time.sleep(0.3)
+  
+    ft = time.time()
+    sock.send(s)
+    time.sleep(0.1)
+    #~ for i in xrange(20):
+       #~ sock.send (s[i*15360:(i+1)*15360])
+       #~ time.sleep(0.3)
+       #~ 
+    dat = sock.recvfrom(1024)
+    print ord(dat[0])
+    #print struct.unpack('<H',dat)
+   
+    tim = time.time()-ft
+    print "time took  :",tim   
        
-    # show the frame
-   # cv2.imshow("Frame", img)
-    
-    
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
     
     rawCapture.truncate(0)
-
+    time.sleep(0.01)
 camera.release()
 cv2.destroyAllWindows() 

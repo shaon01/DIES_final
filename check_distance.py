@@ -6,12 +6,20 @@ from picamera.array import PiRGBArray
 from picamera import PiCamera
 
 from oct2py import octave
-#octave.addpath('./for_octave/image_matlab')
+
 import time
 import cv2
 
 import struct, time
 from RobotCommunication import SerialCommands
+
+import socket
+
+host = '192.168.30.37'   ###address of the server
+port = 9092
+
+sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+sock.connect((host , port))
 
 robot = SerialCommands('/dev/ttyAMA0',115200)
 print robot.init()
@@ -21,10 +29,6 @@ camera = PiCamera()
 camera.resolution = (640, 480)
 rawCapture = PiRGBArray(camera, size=(640, 480))
 
-cruise_distance = 200 ## in mm
-v_max = 80 ## in mm/s
-v_curr = 1
-a_max = 2
 
 # allow the camera to warmup
 time.sleep(0.1)
@@ -40,7 +44,7 @@ def findDist():
     cv2.waitKey(1)
     
     cv2.imwrite('cam.jpg',imgc)    #save image
-    time.sleep(0.1)                #wait to save the image
+    time.sleep(0.5)                #wait to save the image
     imt = cv2.imread('cam.jpg')    #read the saved image
 
     #print 'send image'
@@ -59,38 +63,17 @@ def findDist():
     
 if __name__ == '__main__':
     
-    max_time = 620
+    max_time = 120
     start_time = time.time()  # remember when we started
-    dist,t_im= findDist()
+    
     
     while (time.time() - start_time) < max_time:
-        dist,t_im= findDist()  
-        if dist == 20:
-            while dist == 20:
-                
-                v_now = robot.cruiseControl(2000) #no spirals so increase speed
-                dist,t_im= findDist()
-                
-                print 'first loop dist :',dist
-                print 'v_now :',v_now
-            
-        else:
-            real_dist = dist - (v_now*t_im)
-            while v_now > 2:
-                v_now = robot.cruiseControl(real_dist) #no spirals so increase speed
-                dist,t_im= findDist()
-                if dist == 20:
-                    real_dist = real_dist - (v_now*t_im)
-                    
-                else:
-                    real_dist = dist - (v_now*t_im)
-                    
-                print 'second loop real distance :',real_dist
-                print 'got  distance :',dist
-                print 'v_now :',v_now
-                        
-        print "----------------------"
-        time.sleep(0.02)
-    robot.init()
+        
+        dist,t_im= findDist()
+        print 'distance :',dist
+        print '-------------------------------'
+        time.sleep(0.01)
+        
+    print robot.init()
     
     

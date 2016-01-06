@@ -1,7 +1,7 @@
 function[spirals] = main_detect_spirals(img)
     
     imrgb = img;
-    mrect =     [1    1   size(imrgb,2) size(imrgb,1)]; thresh=0.6;%defalut 0.6 %entire image as rectangle...
+    mrect =     [1    1   size(imrgb,2) size(imrgb,1)]; thresh=0.85;%defalut 0.6 %entire image as rectangle...
     
     %Region Of Interest, roi, is in the order: rowTL,colTL,rowBR, colBR
     %Translate matlab rectangle to roi
@@ -27,7 +27,7 @@ function[spirals] = main_detect_spirals(img)
     dy=-dx';
     gy=gx';
     
-    sma2=(16); %defalult 16
+    sma2=(10); %defalult 16
     sma=[sma1,sma2];
     typ=2; sm=double(-sma2); gammaf=100;
     % ...if sm is negative then symdergaussgen interprets it as the radius
