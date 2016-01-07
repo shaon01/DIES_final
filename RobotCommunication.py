@@ -32,7 +32,7 @@ import time
 
 ##for cruise control
 cruise_distance = 400 #the distance we want to maintain in mm
-v_max = 35 ##  maximum speed in mm/s. motor speed 100 = 155 mm/s 
+v_max = 50 ##  maximum speed in mm/s. motor speed 100 = 155 mm/s 
 v_curr = 10
 a_max = 10
 d_a_max = 13
@@ -162,17 +162,17 @@ class SerialCommands(object):
     
         global v_curr   
         brk_dist =  cam_distance
-        ctr_dist = ((0.5*v_curr*v_curr)/a_max )+cruise_distance  # calculate the critcal distance
+        ctr_dist = ((0.5*v_curr*v_curr)/d_a_max )+cruise_distance  # calculate the critcal distance
         print 'critical distance:',ctr_dist
         
         if (ctr_dist < brk_dist):   #if there is enough distance it will speed up
             v_curr = min(v_max, v_curr+a_max)
-            #self.startLineFollowing(int(v_curr*0.645))
+            self.startLineFollowing(int(v_curr*0.645))
            
             
         else:   #if not enough distance then starts to speed down
             v_curr = max(2, v_curr - d_a_max)
-            #self.startLineFollowing(int(v_curr*0.645))
+            self.startLineFollowing(int(v_curr*0.645))
             
         
         return (v_curr)

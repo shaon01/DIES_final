@@ -37,13 +37,10 @@ for frame in camera.capture_continuous(rawCapture, format="bgr", use_video_port=
     ft = time.time()
     sock.send(s)
     time.sleep(0.1)
-    #~ for i in xrange(20):
-       #~ sock.send (s[i*15360:(i+1)*15360])
-       #~ time.sleep(0.3)
-       #~ 
+    
     dat = sock.recvfrom(1024)
     print ord(dat[0])
-    #print struct.unpack('<H',dat)
+    
    
     tim = time.time()-ft
     print "time took  :",tim   
