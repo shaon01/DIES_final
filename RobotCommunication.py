@@ -31,15 +31,17 @@ import struct
 import time
 
 ##for cruise control
-cruise_distance = 400 #the distance we want to maintain in mm
-v_max = 50 ##  maximum speed in mm/s. motor speed 100 = 155 mm/s 
+cruise_distance = 500 #the distance we want to maintain in mm
+v_max =100 ##  maximum speed in mm/s. motor speed 100 = 155 mm/s 
 v_curr = 10
-a_max = 10
-d_a_max = 13
+a_max = 16
+d_a_max = 10
 class SerialCommands(object):
     def __init__(self, hardware, com_speed):
         self.hardware = hardware
         self.com_speed = com_speed
+        self.previous_speed=0
+        self.previous_distance=2000
 
     """
     Sends the slave name and code version, e.g. “4pi1.0”. This command also sets
@@ -161,7 +163,7 @@ class SerialCommands(object):
     def cruiseControl(self,cam_distance):   
     
         global v_curr   
-        brk_dist =  cam_distance
+        brk_dist =  cam_distance 
         ctr_dist = ((0.5*v_curr*v_curr)/d_a_max )+cruise_distance  # calculate the critcal distance
         print 'critical distance:',ctr_dist
         
@@ -171,8 +173,38 @@ class SerialCommands(object):
            
             
         else:   #if not enough distance then starts to speed down
-            v_curr = max(2, v_curr - d_a_max)
+            v_curr = max(1, v_curr - d_a_max)
             self.startLineFollowing(int(v_curr*0.645))
+            
+        
+        return (v_curr)
+        
+    def cruiseControl2(self,cam_distance):   
+    
+        global v_curr
+     
+        if(cam_distance>800):
+            if(self.previous_speed>=v_curr):
+                cam_distance=0
+        print 'previous distance ', self.previous_distance
+        print 'cam distance ', cam_distance
+        print self.previous_speed, v_curr
+        if(self.previous_distance>=cam_distance):
+            if (self.previous_speed>=v_curr):
+                print self.previous_speed, v_curr
+                self.previous_speed=v_curr
+                v_curr= max(1, v_curr - d_a_max)
+                print self.previous_speed, v_curr
+
+            else :
+                self.previous_speed=v_curr
+                v_curr=(v_curr+self.previous_speed)/2;
+        else:
+            self.previous_speed=v_curr
+            v_curr = min(v_max, v_curr+a_max)
+        self.previous_distance=cam_distance
+        
+        self.startLineFollowing(int(v_curr*0.645))
             
         
         return (v_curr)

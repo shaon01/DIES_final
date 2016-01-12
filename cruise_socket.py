@@ -57,7 +57,7 @@ def findDist():
     
 if __name__ == '__main__':
     
-    max_time = 240
+    max_time = 30
     start_time = time.time()  # remember when we started
     
     v_now = robot.cruiseControl(2000)
@@ -66,7 +66,23 @@ if __name__ == '__main__':
         
         dist,t_im= findDist()
         real_dist = dist - (v_now*t_im)
-        v_now = robot.cruiseControl(dist)
+        v_now = robot.cruiseControl(real_dist)
+        
+        
+        if real_dist<=600:
+			ctl_dist = real_dist
+			while(dist<300 or dist == 2000):
+				dist,t_im= findDist()
+				
+				if dist == 2000:
+					ctl_dist = max(5,ctl_dist- v_now*t_im)
+					
+				else:
+					ctl_dist = max(5,dist- v_now*t_im)
+									
+				v_now = robot.cruiseControl(ctl_dist)
+				print 'ctl_dist',ctl_dist
+							     
         print 'distance :',real_dist
         print 'current speed :',v_now
         print '-------------------------------'
