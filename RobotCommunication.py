@@ -34,8 +34,8 @@ import time
 cruise_distance = 500 #the distance we want to maintain in mm
 v_max =100 ##  maximum speed in mm/s. motor speed 100 = 155 mm/s 
 v_curr = 10
-a_max = 16
-d_a_max = 10
+a_max = 2
+d_a_max = 2
 class SerialCommands(object):
     def __init__(self, hardware, com_speed):
         self.hardware = hardware
@@ -167,49 +167,26 @@ class SerialCommands(object):
         ctr_dist = ((0.5*v_curr*v_curr)/d_a_max )+cruise_distance  # calculate the critcal distance
         print 'critical distance:',ctr_dist
         
-        if (ctr_dist < brk_dist):   #if there is enough distance it will speed up
-            v_curr = min(v_max, v_curr+a_max)
-            self.startLineFollowing(int(v_curr*0.645))
-           
-            
-        else:   #if not enough distance then starts to speed down
-            v_curr = max(1, v_curr - d_a_max)
-            self.startLineFollowing(int(v_curr*0.645))
-            
+        if brk_dist>=300:
         
-        return (v_curr)
-        
-    def cruiseControl2(self,cam_distance):   
-    
-        global v_curr
-     
-        if(cam_distance>800):
-            if(self.previous_speed>=v_curr):
-                cam_distance=0
-        print 'previous distance ', self.previous_distance
-        print 'cam distance ', cam_distance
-        print self.previous_speed, v_curr
-        if(self.previous_distance>=cam_distance):
-            if (self.previous_speed>=v_curr):
-                print self.previous_speed, v_curr
-                self.previous_speed=v_curr
-                v_curr= max(1, v_curr - d_a_max)
-                print self.previous_speed, v_curr
-
-            else :
-                self.previous_speed=v_curr
-                v_curr=(v_curr+self.previous_speed)/2;
+            if (ctr_dist < brk_dist):   #if there is enough distance it will speed up
+                v_curr = min(v_max, v_curr+a_max)
+                self.startLineFollowing(int(v_curr*0.645))
+               
+                
+            else:   #if not enough distance then starts to speed down
+                v_curr = max(1, v_curr - d_a_max)
+                self.startLineFollowing(int(v_curr*0.645))
+                
         else:
-            self.previous_speed=v_curr
-            v_curr = min(v_max, v_curr+a_max)
-        self.previous_distance=cam_distance
-        
-        self.startLineFollowing(int(v_curr*0.645))
+             self.startLineFollowing(0)
             
         
         return (v_curr)
         
-    def fixedDistance(self,dist_to_go):   # to go a fixed distance call this function
+    
+        
+    def fixedDistance(self,dist_to_go):   # to go a fixed distance call this function with the distance in millimeter
 
         data = self.readEncoders()
         dist = 0
@@ -234,7 +211,7 @@ class SerialCommands(object):
             new = struct.unpack('<ii',data)
             data = 0
                                 
-            dist = (((new[1]- old[1]) + (new[0] - old[0]))/2)*0.1627   # take the average of encoders and multipy by 1 tick = 0.1627mm
+            dist = (((new[1]- old[1]) + (new[0] - old[0]))/2)*0.169   # take the average of encoders and multipy by 1 tick = 0.1627mm
             print dist
         
         self.init()

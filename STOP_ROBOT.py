@@ -8,5 +8,7 @@ robot = SerialCommands('/dev/ttyAMA0',115200)
 #robot.autoCalibrate()
 #time.sleep(5)
 print robot.init()
+#robot.fixedDistance(2000)
+
 
 

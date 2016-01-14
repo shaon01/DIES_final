@@ -6,7 +6,7 @@ from picamera import PiCamera
 
 import time
 import cv2
-
+import numpy as np
 from RobotCommunication import SerialCommands
 
 import socket
@@ -27,12 +27,13 @@ rawCapture = PiRGBArray(camera, size=(640, 480))
 
 # allow the camera to warmup
 time.sleep(0.1)
+    
 
 def findDist():
     camera.capture(rawCapture, format="bgr")
     img = rawCapture.array               #take image
     
-    img_crp = img[250:640,0:640]  #crop image lower half
+    img_crp = img[250:640,150:490]  #crop image lower half
     frame = cv2.cvtColor(img_crp, cv2.COLOR_BGR2GRAY)
    
     d = frame.flatten ()
@@ -40,7 +41,7 @@ def findDist():
   
     ft = time.time()
     sock.send(s)
-    time.sleep(0.01)
+    #time.sleep(0.01)
     
     temp_data = sock.recvfrom(1024)
     dist = ord(temp_data[0])
@@ -57,7 +58,7 @@ def findDist():
     
 if __name__ == '__main__':
     
-    max_time = 30
+    max_time = 400
     start_time = time.time()  # remember when we started
     
     v_now = robot.cruiseControl(2000)
@@ -70,19 +71,19 @@ if __name__ == '__main__':
         
         
         if real_dist<=600:
-			ctl_dist = real_dist
-			while(dist<300 or dist == 2000):
-				dist,t_im= findDist()
-				
-				if dist == 2000:
-					ctl_dist = max(5,ctl_dist- v_now*t_im)
-					
-				else:
-					ctl_dist = max(5,dist- v_now*t_im)
-									
-				v_now = robot.cruiseControl(ctl_dist)
-				print 'ctl_dist',ctl_dist
-							     
+            ctl_dist = real_dist
+            while(dist<300 ):
+                dist,t_im, = findDist()
+                
+                if dist == 2000:
+                    ctl_dist = max(5,ctl_dist- v_now*t_im)
+                    
+                else:
+                    ctl_dist = max(5,dist- v_now*t_im)
+                                    
+                v_now = robot.cruiseControl(ctl_dist)
+                print 'ctl_dist',ctl_dist
+                                 
         print 'distance :',real_dist
         print 'current speed :',v_now
         print '-------------------------------'
