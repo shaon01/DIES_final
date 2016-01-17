@@ -10,8 +10,9 @@ import numpy as np
 from RobotCommunication import SerialCommands
 
 import socket
+import scipy.integrate
 
-cruise_dist =400
+cruise_dist =300
 v_desr = 100
 
 host = '192.168.30.37'   ###address of the server
@@ -64,15 +65,19 @@ if __name__ == '__main__':
     robot.startLineFollowing(50)
     v_now = 60
     dist,t_im= findDist()
-    
+    P = 18
+    I = 1
+    err = 0
     while (1):
                 
         if dist>0:
-  
+			
                 if dist >= cruise_dist:
-                    
+                    err_prev = err
                     err = (dist-v_now*t_im) - cruise_dist
-                    temp_sp  =  min(v_desr, err)
+                    i_err = scipy.integrate.simps([int(err_prev), int(err)])
+                    err_new = P*err + I*i_err
+                    temp_sp  =  min(v_desr, err*t_im)
                     v_now = max(temp_sp,0)
                     robot.startLineFollowing(int(v_now*0.645))
                     dist,t_im= findDist()
@@ -88,7 +93,7 @@ if __name__ == '__main__':
                 
                 
         else:
-            
+            v_now = v_desr
             robot.startLineFollowing(int (v_now*0.645))
             dist,t_im = findDist()
             
