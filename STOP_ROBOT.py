@@ -1,6 +1,7 @@
 from RobotCommunication import SerialCommands
 import time
 
+dist = int(raw_input('set distance/n'))
 robot = SerialCommands('/dev/ttyAMA0',115200)
 #robot.resetEncoders()
 #old = robot.readEncoders()
@@ -8,7 +9,8 @@ robot = SerialCommands('/dev/ttyAMA0',115200)
 #robot.autoCalibrate()
 #time.sleep(5)
 print robot.init()
-#robot.fixedDistance(2000)
+robot.fixedDistance(dist)
+#robot.startLineFollowing(40)
 
 
 

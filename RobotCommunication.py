@@ -32,10 +32,10 @@ import time
 
 ##for cruise control
 cruise_distance = 500 #the distance we want to maintain in mm
-v_max =100 ##  maximum speed in mm/s. motor speed 100 = 155 mm/s 
+ ##  maximum speed in mm/s. motor speed 100 = 155 mm/s 
 v_curr = 10
-a_max = 2
-d_a_max = 2
+a_max = 10
+d_a_max = 10
 class SerialCommands(object):
     def __init__(self, hardware, com_speed):
         self.hardware = hardware
@@ -161,28 +161,27 @@ class SerialCommands(object):
     or else start to deaccelarate.   
     '''
     def cruiseControl(self,cam_distance):   
-    
-        global v_curr   
+        global v_curr
+        v_max = 100 
         brk_dist =  cam_distance 
-        ctr_dist = ((0.5*v_curr*v_curr)/d_a_max )+cruise_distance  # calculate the critcal distance
+        ctr_dist = ((0.5*v_curr*v_curr)/d_a_max )#+cruise_distance  # calculate the critcal distance
         print 'critical distance:',ctr_dist
         
-        if brk_dist>=300:
         
-            if (ctr_dist < brk_dist):   #if there is enough distance it will speed up
-                v_curr = min(v_max, v_curr+a_max)
-                self.startLineFollowing(int(v_curr*0.645))
-               
-                
-            else:   #if not enough distance then starts to speed down
-                v_curr = max(1, v_curr - d_a_max)
-                self.startLineFollowing(int(v_curr*0.645))
-                
-        else:
-             self.startLineFollowing(0)
+        if (ctr_dist < brk_dist):   #if there is enough distance it will speed up
+            v_curr = min(v_max, v_curr+a_max)
+            self.startLineFollowing(int(v_curr*0.645))
+           
             
-        
-        return (v_curr)
+        else:   #if not enough distance then starts to speed down
+            v_curr = max(1, v_curr - d_a_max)
+            self.startLineFollowing(int(v_curr*0.645))
+                
+
+            
+        print 'v_curr',v_curr
+        #serverCom.currentSpeed = v_curr
+
         
     
         
@@ -198,7 +197,7 @@ class SerialCommands(object):
         old = struct.unpack('<ii',data)
         data = 0
             
-        self.startLineFollowing(100)
+        #self.startLineFollowing(100)
         
         while(dist <= dist_to_go):
             
@@ -211,7 +210,9 @@ class SerialCommands(object):
             new = struct.unpack('<ii',data)
             data = 0
                                 
-            dist = (((new[1]- old[1]) + (new[0] - old[0]))/2)*0.169   # take the average of encoders and multipy by 1 tick = 0.1627mm
+            dist = (((new[1]- old[1]) + (new[0] - old[0]))/2)*0.165   # take the average of encoders and multipy by 1 tick = 0.1627mm
+            
+            self.cruiseControl(dist_to_go - dist)
             print dist
         
         self.init()
