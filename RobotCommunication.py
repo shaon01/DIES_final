@@ -30,10 +30,18 @@ import serial
 import struct
 import time
 
+##for cruise control
+cruise_distance = 500 #the distance we want to maintain in mm
+ ##  maximum speed in mm/s. motor speed 100 = 155 mm/s 
+v_curr = 10
+a_max = 10
+d_a_max = 10
 class SerialCommands(object):
     def __init__(self, hardware, com_speed):
         self.hardware = hardware
         self.com_speed = com_speed
+        self.previous_speed=0
+        self.previous_distance=2000
 
     """
     Sends the slave name and code version, e.g. “4pi1.0”. This command also sets
@@ -148,75 +156,100 @@ class SerialCommands(object):
         else:
             direction = '\xC6'
         return self.sendCommand(direction+chr(abs(motor_speed)),0)
+    '''    
+    cruiseControl will take distance to object as an input. If it has enough time to break then it will speed up
+    or else start to deaccelarate.   
+    '''
+    def cruiseControl(self,cam_distance):   
+        global v_curr
+        v_max = 100 
+        brk_dist =  cam_distance 
+        ctr_dist = ((0.5*v_curr*v_curr)/d_a_max )#+cruise_distance  # calculate the critcal distance
+        print 'critical distance:',ctr_dist
         
         
-        
-    def fixedDistance(self,dist_to_go):   # to go a fixed distance call this function
+        if (ctr_dist < brk_dist):   #if there is enough distance it will speed up
+            v_curr = min(v_max, v_curr+a_max)
+            self.startLineFollowing(int(v_curr*0.645))
+           
+            
+        else:   #if not enough distance then starts to speed down
+            v_curr = max(1, v_curr - d_a_max)
+            self.startLineFollowing(int(v_curr*0.645))
+                
 
-		data = self.readEncoders()
-		dist = 0
-		
-		while (len(data)!=8):
-			data = self.readEncoders()
-			time.sleep(0.1)
-					
-		old = struct.unpack('<ii',data)
-		data = 0
-			
-		self.startLineFollowing(100)
-		
-		while(dist <= dist_to_go):
-			
-			data = self.readEncoders()
-			time.sleep(0.1)
-			while (len(data)!=8):  
-				time.sleep(0.1)			###reading encoders
-				data = self.readEncoders()
-				
-				
-					
-			new = struct.unpack('<ii',data)
-			data = 0
-				
-				
-			dist = (((new[1]- old[1]) + (new[0] - old[0]))/2)*0.1627   # take the average of encoders and multipy by 1 tick = 0.1627mm
-			print dist
-		
-		self.init()
+            
+        print 'v_curr',v_curr
+        #serverCom.currentSpeed = v_curr
+
+        
+    
+        
+    def fixedDistance(self,dist_to_go):   # to go a fixed distance call this function with the distance in millimeter
+
+        data = self.readEncoders()
+        dist = 0
+        
+        while (len(data)!=8):
+            data = self.readEncoders()
+            time.sleep(0.1)
+                    
+        old = struct.unpack('<ii',data)
+        data = 0
+            
+        #self.startLineFollowing(100)
+        
+        while(dist <= dist_to_go):
+            
+            data = self.readEncoders()
+            time.sleep(0.1)
+            while (len(data)!=8):  
+                time.sleep(0.1)         ###reading encoders
+                data = self.readEncoders()
+                                    
+            new = struct.unpack('<ii',data)
+            data = 0
+                                
+            dist = (((new[1]- old[1]) + (new[0] - old[0]))/2)*0.165   # take the average of encoders and multipy by 1 tick = 0.1627mm
+            
+            self.cruiseControl(dist_to_go - dist)
+            print dist
+        
+        self.init()
 
     def laneChange(self,direction, speed):    ##lane switch
-		self.init() 
-		### ROTATE
-		self.motor1(-30*direction)
-		self.motor2(30*direction)
-		time.sleep(0.3)
-		
-		##### SWITCH LANE
-		if speed < 10:
-			speed = 10			
-		self.motor1(-speed)
-		self.motor2(-speed)
-		dist = 1000
-		time.sleep(0.1)
-		
-		while(dist>100): #line change stops when middel sensor is less then the value
-			
-			data = self.readCalibratedIRSensors()
-			if len(data) == 10:
-				new = struct.unpack('<hhhhh',data)
-				dist = new[2]
-				#print new
-			
-			time.sleep(0.05)
-						
-		self.init()
-		#time.sleep(0.5)
-		#self.startLineFollowing(20) ##switch to line following again 
-		
+        self.init() 
+        ### ROTATE
+        self.motor1(-30*direction)
+        self.motor2(30*direction)
+        time.sleep(0.3)
+        
+        ##### SWITCH LANE
+        if speed < 10:
+            speed = 10          
+        self.motor1(-speed)
+        self.motor2(-speed)
+        dist = 1000
+        time.sleep(0.1)
+        
+        while(dist>100): #line change stops when middel sensor is less then the value
+            
+            data = self.readCalibratedIRSensors()
+            if len(data) == 10:
+                new = struct.unpack('<hhhhh',data)
+                dist = new[2]
+                #print new
+            
+            time.sleep(0.05)
+                        
+        self.init()
+        #time.sleep(0.5)
+        #self.startLineFollowing(20) ##switch to line following again 
+        
     """
     USED INTERNALY TO SEND COMMANDS AND FETCH THE ANSWERS.
     /!\  USE THE FUNCTIONS ABOVE INSTEAD OF SENDING COMMANDS VIA THIS ONE  /!\
-    """		
+    """     
     def sendCommand(self, command, response_size):
         s = serial.Serial(self.hardware, self.com_speed, timeout=1)
         s.open()
